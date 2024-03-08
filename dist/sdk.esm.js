@@ -12,11 +12,13 @@ import { getNetwork } from '@ethersproject/networks';
 import { getDefaultProvider } from '@ethersproject/providers';
 import IUniswapV2Pair from '@uniswap/v2-core/build/IUniswapV2Pair.json';
 
-var _SOLIDITY_TYPE_MAXIMA;
+var _FACTORY_ADDRESSES, _INIT_CODE_HASHES, _SOLIDITY_TYPE_MAXIMA;
 var ChainId;
 
 (function (ChainId) {
-  ChainId[ChainId["MAINNET"] = 168587773] = "MAINNET";
+  ChainId[ChainId["MAINNET"] = 1] = "MAINNET";
+  ChainId[ChainId["BLAST"] = 168587773] = "BLAST";
+  ChainId[ChainId["INJ"] = 2525] = "INJ";
 })(ChainId || (ChainId = {}));
 
 var TradeType;
@@ -34,8 +36,8 @@ var Rounding;
   Rounding[Rounding["ROUND_UP"] = 2] = "ROUND_UP";
 })(Rounding || (Rounding = {}));
 
-var FACTORY_ADDRESS = '0x529dd79Be3A064e72532398347928501Ed8ea9a1';
-var INIT_CODE_HASH = '0x8708e33ae4506e6198f924cd73383806effdcb87e4bccea2eaa5625b51a2da8b';
+var FACTORY_ADDRESSES = (_FACTORY_ADDRESSES = {}, _FACTORY_ADDRESSES[ChainId.MAINNET] = '0x529dd79Be3A064e72532398347928501Ed8ea9a1', _FACTORY_ADDRESSES[ChainId.BLAST] = '0x529dd79Be3A064e72532398347928501Ed8ea9a1', _FACTORY_ADDRESSES[ChainId.INJ] = '0x529dd79Be3A064e72532398347928501Ed8ea9a1', _FACTORY_ADDRESSES);
+var INIT_CODE_HASHES = (_INIT_CODE_HASHES = {}, _INIT_CODE_HASHES[ChainId.BLAST] = '0x8708e33ae4506e6198f924cd73383806effdcb87e4bccea2eaa5625b51a2da8b', _INIT_CODE_HASHES[ChainId.INJ] = '0x8708e33ae4506e6198f924cd73383806effdcb87e4bccea2eaa5625b51a2da8b', _INIT_CODE_HASHES[ChainId.MAINNET] = '0x8708e33ae4506e6198f924cd73383806effdcb87e4bccea2eaa5625b51a2da8b', _INIT_CODE_HASHES);
 var MINIMUM_LIQUIDITY = /*#__PURE__*/JSBI.BigInt(1); // exports for internal consumption
 
 var ZERO = /*#__PURE__*/JSBI.BigInt(0);
@@ -434,7 +436,7 @@ function currencyEquals(currencyA, currencyB) {
     return currencyA === currencyB;
   }
 }
-var WETH = (_WETH = {}, _WETH[ChainId.MAINNET] = /*#__PURE__*/new Token(ChainId.MAINNET, '0x4200000000000000000000000000000000000023', 18, 'WETH', 'Wrapped ETH'), _WETH);
+var WETH = (_WETH = {}, _WETH[ChainId.MAINNET] = /*#__PURE__*/new Token(ChainId.MAINNET, '0x4200000000000000000000000000000000000023', 18, 'WETH', 'Wrapped ETH'), _WETH[ChainId.BLAST] = /*#__PURE__*/new Token(ChainId.BLAST, '0x4200000000000000000000000000000000000023', 18, 'WETH', 'Wrapped ETH'), _WETH[ChainId.INJ] = /*#__PURE__*/new Token(ChainId.INJ, '0x4200000000000000000000000000000000000023', 18, 'WETH', 'Wrapped ETH'), _WETH);
 
 var _toSignificantRoundin, _toFixedRounding;
 var Decimal = /*#__PURE__*/toFormat(_Decimal);
@@ -757,11 +759,11 @@ var Pair = /*#__PURE__*/function () {
   function Pair(tokenAmountA, tokenAmountB) {
     var tokenAmounts = tokenAmountA.token.sortsBefore(tokenAmountB.token) // does safety checks
     ? [tokenAmountA, tokenAmountB] : [tokenAmountB, tokenAmountA];
-    this.liquidityToken = new Token(tokenAmounts[0].token.chainId, Pair.getAddress(tokenAmounts[0].token, tokenAmounts[1].token), 18, 'UNI-V2', 'Uniswap V2');
+    this.liquidityToken = new Token(tokenAmounts[0].token.chainId, Pair.getAddress(tokenAmounts[0].token, tokenAmounts[1].token, tokenAmounts[0].token.chainId), 18, 'UNI-V2', 'Uniswap V2');
     this.tokenAmounts = tokenAmounts;
   }
 
-  Pair.getAddress = function getAddress(tokenA, tokenB) {
+  Pair.getAddress = function getAddress(tokenA, tokenB, chainId) {
     var _PAIR_ADDRESS_CACHE, _PAIR_ADDRESS_CACHE$t;
 
     var tokens = tokenA.sortsBefore(tokenB) ? [tokenA, tokenB] : [tokenB, tokenA]; // does safety checks
@@ -769,7 +771,7 @@ var Pair = /*#__PURE__*/function () {
     if (((_PAIR_ADDRESS_CACHE = PAIR_ADDRESS_CACHE) === null || _PAIR_ADDRESS_CACHE === void 0 ? void 0 : (_PAIR_ADDRESS_CACHE$t = _PAIR_ADDRESS_CACHE[tokens[0].address]) === null || _PAIR_ADDRESS_CACHE$t === void 0 ? void 0 : _PAIR_ADDRESS_CACHE$t[tokens[1].address]) === undefined) {
       var _PAIR_ADDRESS_CACHE2, _extends2, _extends3;
 
-      PAIR_ADDRESS_CACHE = _extends({}, PAIR_ADDRESS_CACHE, (_extends3 = {}, _extends3[tokens[0].address] = _extends({}, (_PAIR_ADDRESS_CACHE2 = PAIR_ADDRESS_CACHE) === null || _PAIR_ADDRESS_CACHE2 === void 0 ? void 0 : _PAIR_ADDRESS_CACHE2[tokens[0].address], (_extends2 = {}, _extends2[tokens[1].address] = getCreate2Address(FACTORY_ADDRESS, keccak256(['bytes'], [pack(['address', 'address'], [tokens[0].address, tokens[1].address])]), INIT_CODE_HASH), _extends2)), _extends3));
+      PAIR_ADDRESS_CACHE = _extends({}, PAIR_ADDRESS_CACHE, (_extends3 = {}, _extends3[tokens[0].address] = _extends({}, (_PAIR_ADDRESS_CACHE2 = PAIR_ADDRESS_CACHE) === null || _PAIR_ADDRESS_CACHE2 === void 0 ? void 0 : _PAIR_ADDRESS_CACHE2[tokens[0].address], (_extends2 = {}, _extends2[tokens[1].address] = getCreate2Address(FACTORY_ADDRESSES[chainId], keccak256(['bytes'], [pack(['address', 'address'], [tokens[0].address, tokens[1].address])]), INIT_CODE_HASHES[chainId]), _extends2)), _extends3));
     }
 
     return PAIR_ADDRESS_CACHE[tokens[0].address][tokens[1].address];
@@ -1549,7 +1551,7 @@ var Fetcher = /*#__PURE__*/function () {
     try {
       if (provider === undefined) provider = getDefaultProvider(getNetwork(tokenA.chainId));
       !(tokenA.chainId === tokenB.chainId) ? process.env.NODE_ENV !== "production" ? invariant(false, 'CHAIN_ID') : invariant(false) : void 0;
-      var address = Pair.getAddress(tokenA, tokenB);
+      var address = Pair.getAddress(tokenA, tokenB, tokenA.chainId);
       return Promise.resolve(new Contract(address, IUniswapV2Pair.abi, provider).getReserves()).then(function (_ref) {
         var reserves0 = _ref[0],
             reserves1 = _ref[1];
@@ -1564,5 +1566,5 @@ var Fetcher = /*#__PURE__*/function () {
   return Fetcher;
 }();
 
-export { ChainId, Currency, CurrencyAmount, ETHER, FACTORY_ADDRESS, Fetcher, Fraction, INIT_CODE_HASH, InsufficientInputAmountError, InsufficientReservesError, MINIMUM_LIQUIDITY, Pair, Percent, Price, Rounding, Route, Router, Token, TokenAmount, Trade, TradeType, WETH, currencyEquals, inputOutputComparator, tradeComparator };
+export { ChainId, Currency, CurrencyAmount, ETHER, FACTORY_ADDRESSES, Fetcher, Fraction, INIT_CODE_HASHES, InsufficientInputAmountError, InsufficientReservesError, MINIMUM_LIQUIDITY, Pair, Percent, Price, Rounding, Route, Router, Token, TokenAmount, Trade, TradeType, WETH, currencyEquals, inputOutputComparator, tradeComparator };
 //# sourceMappingURL=sdk.esm.js.map
